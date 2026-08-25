@@ -1,0 +1,32 @@
+name: Restaurar imagem principal
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/restaurar-imagem-principal.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restaurar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Restaurar imagem principal real
+        run: |
+          mkdir -p assets
+          curl -L --fail --retry 3 "https://raw.githubusercontent.com/Vozdebrasilia/tv-voz-site/main/Entrevista%20Exclusiva%20com%20Celina%20Le%C3%A3o%282%29.png" -o assets/paulo-entrevista-real.png
+      - name: Commit da imagem restaurada
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/paulo-entrevista-real.png
+          if git diff --cached --quiet; then
+            echo "Imagem já está correta."
+          else
+            git commit -m "Restaura imagem principal do VOZ Energia"
+            git push
+          fi
