@@ -1,4 +1,4 @@
-name: Restaurar imagem principal
+name: Atualizar VOZ Energia
 
 on:
   workflow_dispatch:
@@ -10,23 +10,34 @@ permissions:
   contents: write
 
 jobs:
-  restaurar:
+  atualizar:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Restaurar imagem principal real
+      - name: Atualizar pagina
         run: |
-          mkdir -p assets
-          curl -L --fail --retry 3 "https://raw.githubusercontent.com/Vozdebrasilia/tv-voz-site/main/Entrevista%20Exclusiva%20com%20Celina%20Le%C3%A3o%282%29.png" -o assets/paulo-entrevista-real.png
-      - name: Commit da imagem restaurada
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('min-height:470px','min-height:235px').replace('min-height:380px','min-height:190px')
+          css='''.braskem-special{background:#fff;border:1px solid #d9c17d;border-radius:14px;padding:30px;margin-bottom:30px;box-shadow:0 12px 32px rgba(7,27,53,.10)}.braskem-special h2{font-size:34px;line-height:1.1;color:var(--navy);margin:12px 0}.braskem-special p{font-size:16px;line-height:1.65;color:var(--muted)}.braskem-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}.braskem-gallery img{width:100%;height:220px;object-fit:cover;border-radius:8px}.analysis-box{border-left:4px solid var(--gold);padding:16px 20px;background:#fff8e7;margin-top:18px}.analysis-box h3{margin:0 0 10px;color:var(--navy)}@media(max-width:620px){.braskem-gallery{grid-template-columns:1fr}.braskem-gallery img{height:210px}}\n'''
+          if '.braskem-special{' not in s:
+              s=s.replace('.news-grid{',css+'.news-grid{',1)
+          article='''<article class="braskem-special"><span class="featured-label">ANÁLISE ESPECIAL • PAULO FAYAD</span><h2>Braskem entra em recuperação extrajudicial com dívida de US$ 10,9 bilhões</h2><p><strong>24 de agosto de 2026.</strong> O Conselho de Administração da Braskem aprovou o ajuizamento de pedido de recuperação extrajudicial. Segundo a companhia, a medida tem escopo financeiro e busca criar um ambiente jurídico estável para negociar e implementar a reestruturação de aproximadamente US$ 10,9 bilhões em dívidas — cerca de R$ 56 bilhões pelo câmbio informado no dia.</p><div class="braskem-gallery"><img src="https://www.braskem.com/portal/Principal/arquivos/listas/16215/capa.webp" alt="Braskem"><img src="https://www.braskem.com/portal/Principal/arquivos/listas/16266/capa.jpeg" alt="Operação da Braskem"><img src="https://imagens.ebc.com.br/OIZ-lK6sJt51EZR68OV3NjgsTQE=/1170x700/smart/https://agenciabrasil.ebc.com.br/sites/default/files/thumbnails/image/_ja03083.jpg?itok=4a1JF0HO" alt="Braskem - foto Agência Brasil"></div><div class="analysis-box"><h3>Análise de Paulo Fayad</h3><p>A recuperação extrajudicial deve ser lida como uma tentativa de reorganizar a estrutura de capital sem paralisar a operação industrial. Isso é relevante porque a Braskem ocupa posição estratégica na petroquímica brasileira e abastece cadeias que alcançam energia, infraestrutura, saneamento, saúde, alimentos, embalagens e bens de consumo.</p><p>O ponto central não é apenas o tamanho da dívida, mas a capacidade de preservar liquidez, geração de caixa e confiança de credores enquanto a companhia atravessa um ambiente global de margens comprimidas e forte concorrência. A presença da Petrobras na estrutura acionária aumenta a dimensão estratégica do caso, mas não elimina a necessidade de disciplina financeira e governança rigorosa.</p><p>Para investidores e para o setor produtivo, a recuperação extrajudicial tende a ser positiva se conseguir alongar vencimentos, reduzir pressão de curto prazo e evitar uma deterioração operacional. O risco está em uma reestruturação insuficiente, capaz apenas de adiar decisões. O verdadeiro teste será transformar alívio financeiro em eficiência, competitividade e retomada sustentável.</p><p>Também permanece incontornável o passivo associado a Maceió. A solução financeira não substitui compromissos ambientais, sociais e reparatórios. O futuro da Braskem dependerá da capacidade de combinar reestruturação de dívida, governança, responsabilidade socioambiental e uma estratégia industrial coerente para a petroquímica brasileira.</p><p><strong>Paulo Fayad — jornalista e analista.</strong></p></div><div class="source">Fontes: Agência Brasil e Braskem • 24/08/2026</div><a class="read" target="_blank" rel="noopener" href="https://agenciabrasil.ebc.com.br/economia/noticia/2026-08/conselho-aprova-pedido-de-recuperacao-extrajudicial-da-braskem">Leia a notícia-base →</a></article>\n'''
+          if 'Braskem entra em recuperação extrajudicial' not in s:
+              s=s.replace('<div class="news-grid">',article+'<div class="news-grid">',1)
+          m=re.search(r'(<div class="auth-grid">)(.*?)(</div>\s*</div>\s*</section>)',s,re.S)
+          if m:
+              cards='''<div class="auth"><b>220 mil+ no Instagram</b><span>Comunidade consolidada nas plataformas da Voz de Brasília.</span></div><div class="auth"><b>1.000+ entrevistas</b><span>Entrevistas institucionais, empresariais, políticas e internacionais.</span></div><div class="auth"><b>10 mil+ horas</b><span>Histórico de transmissão, cobertura e produção audiovisual.</span></div><div class="auth"><b>Prêmios e reconhecimentos</b><span>Top of Millenium, Anuário Brasileiro e premiações institucionais acumuladas ao longo da trajetória.</span></div>'''
+              s=s[:m.start(2)]+cards+s[m.end(2):]
+          p.write_text(s)
+          PY
+      - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/paulo-entrevista-real.png
-          if git diff --cached --quiet; then
-            echo "Imagem já está correta."
-          else
-            git commit -m "Restaura imagem principal do VOZ Energia"
-            git push
-          fi
+          git add index.html
+          if git diff --cached --quiet; then echo "Sem mudanças"; else git commit -m "Atualiza Braskem, métricas e reduz imagem principal" && git push; fi
